@@ -1,0 +1,437 @@
+{
+	"info": {
+		"_postman_id": "4c28e783-0d77-462f-b73f-83aa4ba063dd",
+		"name": "API TCOE Activity",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "9289248"
+	},
+	"item": [
+		{
+			"name": "Get Books",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const assert = require('assert');    //need to import for assert statements, chai expect no need to import specifically",
+							"",
+							"//checking the status code",
+							"pm.test(\"Check if the status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"//storing the response json",
+							"var jsonData = pm.response.json();",
+							"",
+							"//checking the default num values",
+							"pm.test(\"Check if all the ID and Pagecount number feilds have positive values\", function () {",
+							"    for(i=0; i<jsonData.length; i++){",
+							"        pm.expect(jsonData[i].id).to.be.above(0, `Expected id=${jsonData[i].id} to be greater than 0`);",
+							"        pm.expect(jsonData[i].pageCount).to.be.above(0, `Expected page count of id=${jsonData[i].id} to be greater than 0`);",
+							"    }",
+							"});",
+							"",
+							"//checking required values are not null by iterating",
+							"pm.test(\"Check if none of the required feilds in response have nil values\", function () {",
+							"    for(i=0; i<jsonData.length; i++){",
+							"        if((jsonData[i].id == null) || (jsonData[i].id == '')){",
+							"            assert.fail(\"ID value is null or empty for ID=\"+jsonData[i].id);",
+							"        }",
+							"        if((jsonData[i].title == null) || (jsonData[i].title == '')){",
+							"            assert.fail(\"Title value is null or empty for ID=\"+jsonData[i].id);",
+							"        }",
+							"    }",
+							"});",
+							"",
+							"//searching for a particular title and storing its id for deletion in next api call",
+							"for(i=0; i<jsonData.length; i++){",
+							"    if(jsonData[i].title == \"Book 4\")",
+							"    pm.collectionVariables.set(\"Del_id\", jsonData[i].id);",
+							"        ",
+							"}",
+							"",
+							"//checking a particular id is having required title",
+							"pm.test(\"Verify that id=7 is having tite as Book 7\", function () {",
+							"    for(i=0; i<jsonData.length; i++){",
+							"        if(jsonData[i].id == 7){",
+							"            pm.expect(jsonData[i].title).to.equal(\"Book 7\");",
+							"            break;        //exiting loop as no need to continue",
+							"        }",
+							"    }",
+							"});",
+							"",
+							"// Define your JSON schema",
+							"const schema = [{",
+							"  \"type\": \"object\",",
+							"  \"properties\": {",
+							"    \"id\": {",
+							"      \"type\": \"integer\"",
+							"    },",
+							"    \"title\": {",
+							"      \"type\": \"string\"",
+							"    },",
+							"    \"description\": {",
+							"      \"type\": \"string\"",
+							"    },",
+							"    \"pageCount\": {",
+							"      \"type\": \"integer\"",
+							"    },",
+							"    \"excerpt\": {",
+							"      \"type\": \"string\"",
+							"    },",
+							"    \"publishDate\": {",
+							"      \"type\": \"string\",",
+							"      \"format\": \"date-time\"",
+							"    }",
+							"  },",
+							"  \"required\": [\"id\", \"title\", \"description\", \"pageCount\", \"excerpt\", \"publishDate\"]",
+							"}];",
+							"",
+							"",
+							"let result = tv4.validate(jsonData, schema); //sometimes t4 need to be imported separately using: const tv4 = require('tv4');",
+							"",
+							"//checking the schema",
+							"pm.test(\"Schema is valid\", function () {",
+							"    pm.expect(result).to.be.true;",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "accept",
+						"value": "text/plain; v=1.0"
+					}
+				],
+				"url": {
+					"raw": "{{TCOE_URL}}/api/v1/Books",
+					"host": [
+						"{{TCOE_URL}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"Books"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Del a Book",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"//checking the response time",
+							"pm.test(\"Response time is less than 300ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(300,\"Taking more than accepted time for deletion\");",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "accept",
+						"value": "*/*"
+					}
+				],
+				"url": {
+					"raw": "{{TCOE_URL}}/api/v1/Books/{{Del_id}}",
+					"host": [
+						"{{TCOE_URL}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"Books",
+						"{{Del_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Post a Book",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"//checking the status code",
+							"pm.test(\"Check if the status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"//storing the response json",
+							"var jsonData = pm.response.json();",
+							"",
+							"//storing the posted values from collection variables",
+							"var title = pm.collectionVariables.get(\"post_title\");",
+							"var description = pm.collectionVariables.get(\"post_description\");",
+							"var pageCount = pm.collectionVariables.get(\"pagecount\");",
+							"var excerpt = pm.collectionVariables.get(\"post_excerpt\");",
+							"",
+							"pageCount = parseInt(pageCount);",
+							"//need to convert to integer as variables fetched will be string and have a string quotes",
+							"",
+							"pm.test(\"Verify the Page Count is as Expected\", function () {",
+							"    pm.expect(jsonData.pageCount).to.eq(pageCount);",
+							"});",
+							"",
+							"pm.test(\"Verify the title and description is as Expected\", function () {",
+							"    pm.expect(jsonData.title).to.eq(title);",
+							"    pm.expect(jsonData.description).to.eq(description);",
+							"});",
+							"",
+							"pm.test(\"Verify the excerpt is as Expected\", function () {",
+							"    pm.expect(jsonData.excerpt).to.eq(excerpt);",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "accept",
+						"value": "*/*"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json; v=1.0"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"id\":0,\"title\":\"{{post_title}}\",\"description\":\"{{post_description}}\",\"pageCount\":{{pagecount}},\"excerpt\":\"{{post_excerpt}}\",\"publishDate\":\"2024-06-26T08:16:39.085Z\"}"
+				},
+				"url": {
+					"raw": "{{TCOE_URL}}/api/v1/Books",
+					"host": [
+						"{{TCOE_URL}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"Books"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Edit a Book",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"//checking the status code",
+							"pm.test(\"Check if the status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"//storing the response json",
+							"var jsonData = pm.response.json();",
+							"",
+							"//storing the posted values from collection variables",
+							"var title = pm.collectionVariables.get(\"change_title\");",
+							"var description = pm.collectionVariables.get(\"change_description\");",
+							"",
+							"pm.test(\"Verify the title is changed as Expected\", function () {",
+							"    pm.expect(jsonData.title).to.eq(title);",
+							"});",
+							"",
+							"pm.test(\"Verify the description is changed as Expected\", function () {",
+							"    pm.expect(jsonData.description).to.eq(description);",
+							"});",
+							"//NOTE: In actual projects these verifications should be done in scripting of GET api that fetches the changed book info and displays on app.Since we are using Dummy apis even if we fetch the GET for this ID it will not be changed, so adding assertion as example here itself.",
+							"",
+							"//setting an id s global variable to use in next Api call",
+							"pm.globals.set(\"global_id\", jsonData.id);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "accept",
+						"value": "*/*"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json; v=1.0"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"id\":8,\"title\":\"{{change_title}}\",\"description\":\"{{change_description}}\",\"pageCount\":4,\"excerpt\":\"excerpt\",\"publishDate\":\"2024-07-26T10:35:47.532Z\"}"
+				},
+				"url": {
+					"raw": "{{TCOE_URL}}/api/v1/Books/1",
+					"host": [
+						"{{TCOE_URL}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"Books",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get a specific book",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Parse the response body JSON",
+							"let jsonData = pm.response.json();",
+							"",
+							"// Check if the required keys exists in the response body",
+							"pm.test(\"Check if response body has required keys\", function () {",
+							"    pm.expect(jsonData).to.have.property('id');",
+							"    pm.expect(jsonData).to.have.property('title');",
+							"    pm.expect(jsonData).to.have.property('description');",
+							"    pm.expect(jsonData).to.have.property('pageCount');",
+							"    pm.expect(jsonData).to.have.property('excerpt');",
+							"    pm.expect(jsonData).to.have.property('publishDate');",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "accept",
+						"value": "text/plain; v=1.0"
+					}
+				],
+				"url": {
+					"raw": "{{TCOE_URL}}/api/v1/Books/{{global_id}}",
+					"host": [
+						"{{TCOE_URL}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"Books",
+						"{{global_id}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "Del_id",
+			"value": ""
+		},
+		{
+			"key": "post_title",
+			"value": "My Book",
+			"type": "string"
+		},
+		{
+			"key": "post_description",
+			"value": "Fantacy Book",
+			"type": "string"
+		},
+		{
+			"key": "pagecount",
+			"value": "3"
+		},
+		{
+			"key": "post_excerpt",
+			"value": "Novel",
+			"type": "string"
+		},
+		{
+			"key": "change_title",
+			"value": "Casino",
+			"type": "string"
+		},
+		{
+			"key": "change_description",
+			"value": "Based on a true story",
+			"type": "string"
+		}
+	]
+}

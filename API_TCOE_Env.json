@@ -1,0 +1,15 @@
+{
+	"id": "66980ebd-6f63-410f-bc31-8ec0393d01f8",
+	"name": "API TCOE Env",
+	"values": [
+		{
+			"key": "TCOE_URL",
+			"value": "https://fakerestapi.azurewebsites.net",
+			"type": "default",
+			"enabled": true
+		}
+	],
+	"_postman_variable_scope": "environment",
+	"_postman_exported_at": "2024-07-10T07:29:41.084Z",
+	"_postman_exported_using": "Postman/10.24.26"
+}
