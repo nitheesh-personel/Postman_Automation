@@ -1,0 +1,347 @@
+{
+	"info": {
+		"_postman_id": "6ccc86c9-a719-4ab0-8834-78a1db4f9ca9",
+		"name": "Advanced model-API TCOE Activity",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "9289248"
+	},
+	"item": [
+		{
+			"name": "Post a Book with random details",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"//storing the response json",
+							"var jsonData = pm.response.json();",
+							"",
+							"//storing the posted values from collection variables",
+							"var title = pm.collectionVariables.get(\"post_title\");",
+							"var description = pm.collectionVariables.get(\"post_description\");",
+							"//storing the random posted values from request",
+							"var pageCount = JSON.parse(pm.request.body.raw).pageCount;",
+							"var date = JSON.parse(pm.request.body.raw).publishDate;",
+							"",
+							"pm.test(\"Verify the Page Count is as Expected\", function () {",
+							"    pm.expect(jsonData.pageCount).to.eq(pageCount);",
+							"});",
+							"",
+							"pm.test(\"Verify the publish date is as Expected\", function () {",
+							"    pm.expect(jsonData.publishDate).to.eq(date);",
+							"});",
+							"",
+							"pm.test(\"Verify the title and description is as Expected\", function () {",
+							"    pm.expect(jsonData.title).to.eq(title);",
+							"    pm.expect(jsonData.description).to.eq(description);",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"//generate random number",
+							"function getRandomInt(min, max) {",
+							"    return Math.floor(Math.random() * (max - min + 1)) + min;",
+							"}",
+							"",
+							"// Generate a random integer between 1 and 100",
+							"const randomInt = getRandomInt(1, 100);",
+							"",
+							"// Function to generate a random date within a given range",
+							"function getRandomDate(startDate, endDate) {",
+							"    const start = new Date(startDate).getTime();",
+							"    const end = new Date(endDate).getTime();",
+							"    const randomTime = Math.random() * (end - start) + start;",
+							"    return new Date(randomTime);",
+							"}",
+							"",
+							"// Define your date range",
+							"const startDate = '2024-01-01T00:00:00.000Z';",
+							"const endDate = '2024-12-31T23:59:59.999Z';",
+							"",
+							"// Generate a random date",
+							"const randomDate = getRandomDate(startDate, endDate);",
+							"// Format the date to ISO 8601 string",
+							"const formattedDate = randomDate.toISOString();",
+							"",
+							"pm.globals.set(\"randomPageNum\", randomInt);",
+							"pm.globals.set(\"randomDate\", formattedDate);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "accept",
+						"value": "*/*"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json; v=1.0"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"id\":0,\"title\":\"{{post_title}}\",\"description\":\"{{post_description}}\",\"pageCount\":{{randomPageNum}},\"excerpt\":\"{{post_excerpt}}\",\"publishDate\":\"{{randomDate}}\"}"
+				},
+				"url": {
+					"raw": "{{TCOE_URL}}/api/v1/Books",
+					"host": [
+						"{{TCOE_URL}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"Books"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Posting Book and Dynamic Deletion of it",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"//checking the status code",
+							"pm.test(\"Check if the status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"//storing the response json",
+							"var jsonData = pm.response.json();",
+							"",
+							"//storing the posted values from collection variables",
+							"var title = pm.collectionVariables.get(\"post_title\");",
+							"var description = pm.collectionVariables.get(\"post_description\");",
+							"var pageCount = pm.collectionVariables.get(\"pagecount\");",
+							"var excerpt = pm.collectionVariables.get(\"post_excerpt\");",
+							"",
+							"pageCount = parseInt(pageCount);",
+							"//need to convert to integer as variables fetched will be string and have a string quotes",
+							"",
+							"pm.test(\"Verify the Page Count is as Expected\", function () {",
+							"    pm.expect(jsonData.pageCount).to.eq(pageCount);",
+							"});",
+							"",
+							"pm.test(\"Verify the title and description is as Expected\", function () {",
+							"    pm.expect(jsonData.title).to.eq(title);",
+							"    pm.expect(jsonData.description).to.eq(description);",
+							"});",
+							"",
+							"pm.test(\"Verify the excerpt is as Expected\", function () {",
+							"    pm.expect(jsonData.excerpt).to.eq(excerpt);",
+							"});",
+							"",
+							"//Dynamic Test Data deletion after posting book",
+							"let url = pm.environment.get(\"TCOE_URL\");",
+							"",
+							"pm.sendRequest({",
+							"    url: `${url}/api/v1/Books/${jsonData.id}`,",
+							"    method: 'DELETE',",
+							"    headers: {",
+							"        'Content-Type': 'application/json'",
+							"    }",
+							"}, function (err, res) {",
+							"    pm.test(\"Posted Book deleted successfully\", function () {",
+							"        pm.expect(res).to.have.status(200);",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "accept",
+						"value": "*/*"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json; v=1.0"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"id\":5,\"title\":\"{{post_title}}\",\"description\":\"{{post_description}}\",\"pageCount\":{{pagecount}},\"excerpt\":\"{{post_excerpt}}\",\"publishDate\":\"2024-06-26T08:16:39.085Z\"}"
+				},
+				"url": {
+					"raw": "{{TCOE_URL}}/api/v1/Books",
+					"host": [
+						"{{TCOE_URL}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"Books"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Getting Book after Dynamic editing",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"//Status check for the GET call of edited book id",
+							"pm.test(\"Status code of fetching edited book details is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"",
+							"//Editing a Book",
+							"pm.sendRequest({",
+							"    url: 'https://fakerestapi.azurewebsites.net/api/v1/Books/1',",
+							"    method: 'PUT',",
+							"    header: {",
+							"        'Content-Type': 'application/json; v=1.0'",
+							"    },",
+							"    body: {",
+							"        mode: 'raw',",
+							"        raw: JSON.stringify({",
+							"            id: 9,",
+							"            title: \"Casino\",",
+							"            description: \"Based on a true story\",",
+							"            pageCount: 4,",
+							"            excerpt: \"excerpt\",",
+							"            publishDate: \"2024-07-26T10:35:47.532Z\"",
+							"        })",
+							"    }",
+							"}, function (err, res) {",
+							"    if (err) {",
+							"        console.error('Error:', err);",
+							"    } else {",
+							"        pm.test(\"Edited the Book successfully\", function () {",
+							"        pm.expect(res).to.have.status(200);",
+							"        });",
+							"    }",
+							"    pm.globals.set(\"global_id\", res.json().id);",
+							"});",
+							"",
+							"//NOTE: The response res is not accessible outside the above function.Hence setting id to global variable done inside function itself.This edited id is used to call the book details.",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "accept",
+						"value": "text/plain; v=1.0"
+					}
+				],
+				"url": {
+					"raw": "{{TCOE_URL}}/api/v1/Books/{{global_id}}",
+					"host": [
+						"{{TCOE_URL}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"Books",
+						"{{global_id}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "Del_id",
+			"value": ""
+		},
+		{
+			"key": "post_title",
+			"value": "My Book",
+			"type": "string"
+		},
+		{
+			"key": "post_description",
+			"value": "Fantacy Book",
+			"type": "string"
+		},
+		{
+			"key": "pagecount",
+			"value": "3"
+		},
+		{
+			"key": "post_excerpt",
+			"value": "Novel",
+			"type": "string"
+		},
+		{
+			"key": "change_title",
+			"value": "Casino",
+			"type": "string"
+		},
+		{
+			"key": "change_description",
+			"value": "Based on a true story",
+			"type": "string"
+		}
+	]
+}
